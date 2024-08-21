@@ -1,6 +1,11 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
+import { EUserStatus } from 'src/common/enums/user.enum';
 import { FoodDto } from 'src/modules/food/dto/food.dto';
 import { Food } from 'src/schemas/food.schema';
 
@@ -12,34 +17,32 @@ export class FoodReponsitory {
   async create(foodDto: FoodDto): Promise<any> {
     try {
       const exists = await this.foodModel.findOne({ name: foodDto.name });
-      if (exists) {
-        return 'Food already exists';
-      }
+      if (exists) throw new ConflictException('Food already exists');
       const createfood = new this.foodModel(foodDto);
+      if (!createfood) throw new UnauthorizedException('Create Fail');
       await createfood.save();
-      if (!createfood) {
-        return {
-          status: 'error',
-          message: 'Create Failed',
-        };
-      }
+
       return createfood;
     } catch (error) {
-      return error.reponse;
+      return error.message;
     }
   }
 
-  async getAll(): Promise<any> {
-    const getAll = await this.foodModel.find({});
+  async getAllFoodForAdmin(page: number): Promise<any> {
+    const pageSize = 10;
+    const skip = (page - 1) * pageSize;
+    const getAll = await this.foodModel.find({}).skip(skip).limit(pageSize);
+    return getAll;
+  }
+
+  async getAllFoodForUser(): Promise<any> {
+    const getAll = await this.foodModel.find({status:EUserStatus.ACTIVE});
     return getAll;
   }
   async getFood(foodId: any): Promise<any> {
     const getFood = await this.foodModel.findById(foodId);
     if (!getFood) {
-      return {
-        status: 'error',
-        message: 'Get Failed',
-      };
+      return 'Get Failed';
     }
     return getFood;
   }
@@ -49,24 +52,38 @@ export class FoodReponsitory {
       new: true,
     });
     if (!update) {
-      return {
-        status: 'error',
-        message: 'Update Failed',
-      };
+      return 'Update Failed';
     }
     return update;
   }
 
-  async deleteFood(foodId: any): Promise<any> {
+  async updateStatusFood(foodId: any): Promise<any> {
+    const food = await this.foodModel.findById(foodId);
+    if (food.status === EUserStatus.ACTIVE) {
+      const update = await this.foodModel.findByIdAndUpdate(
+        foodId,
+        { status: EUserStatus.INACTIVE },
+        { new: true },
+      );
+      return update;
+    } else {
+      const update = await this.foodModel.findByIdAndUpdate(
+        foodId,
+        { status: EUserStatus.ACTIVE },
+        { new: true },
+      );
+      return update;
+    }
+  }
+
+  async deleteFood(foodId: any, password: any): Promise<any> {
+    if (password != '8888') {
+      return 'You do not have sufficient authority to delete';
+    }
     const deletefood = await this.foodModel.findByIdAndDelete(foodId);
     if (!deletefood) {
-      return {
-        status: 'error',
-        message: 'Delete Failed',
-      };
+      return 'Delete Failed';
     }
     return deletefood;
-     
-    
   }
 }

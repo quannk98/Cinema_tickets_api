@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { SeatService } from './seat.srevice';
@@ -22,17 +23,11 @@ export class SeatController {
     try {
       const create = await this.seatService.createSeat(seatDto);
 
-      return {
-        data: {
-          create,
-        },
-      };
+      return create;
     } catch (error) {
       return error.reponse;
     }
   }
-
-  
 
   @UseGuards(AuthGuard)
   @Get('')
@@ -42,7 +37,7 @@ export class SeatController {
   }
   @UseGuards(AuthGuard)
   @Get('room/:roomId')
-  async getSeatByRoom(@Param('roomid') id: any): Promise<any> {
+  async getSeatByRoom(@Param('roomId') id: any): Promise<any> {
     const getSeat = await this.seatService.getSeatByRoom(id);
     return getSeat;
   }
@@ -52,6 +47,16 @@ export class SeatController {
   async getSeatUser(@Param('id') id: any): Promise<any> {
     const getSeat = await this.seatService.getseat(id);
     return getSeat;
+  }
+  @UseGuards(AuthAdminGuard)
+  @Put('status/:id')
+  async updateSeatStatus(@Param('id') id: any): Promise<any> {
+    try {
+      const updated = await this.seatService.updateSeatStatus(id);
+      return updated;
+    } catch (error) {
+      return error.reponse;
+    }
   }
 
   @UseGuards(AuthAdminGuard)
@@ -67,9 +72,12 @@ export class SeatController {
 
   @UseGuards(AuthAdminGuard)
   @Delete(':id')
-  async deleteSeat(@Param('id') id: any): Promise<any> {
-    const deleteseat = await this.seatService.deleteSeat(id);
-    await this.seatService.deleteSeat(id);
+  async deleteSeat(
+    @Param('id') id: any,
+    @Query('password') password: any,
+  ): Promise<any> {
+    const deleteseat = await this.seatService.deleteSeat(id, password);
+    await this.seatService.deleteSeat(id, password);
     return deleteseat;
   }
 }

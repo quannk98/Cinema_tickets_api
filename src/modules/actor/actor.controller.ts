@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -52,19 +53,6 @@ export class ActorController {
     }
   }
 
-  @UseGuards(AuthAdminGuard)
-  @Get('')
-  async getAll(): Promise<any> {
-    try {
-      const getAll = await this.actorService.getAllactor();
-      return {
-        getAll,
-      };
-    } catch (error) {
-      console.log('error ', error);
-    }
-  }
-
   @UseGuards(AuthGuard)
   @Get(':id')
   async getActor(@Param('id') id: any): Promise<any> {
@@ -76,6 +64,24 @@ export class ActorController {
     } catch (error) {
       console.log('error ', error);
     }
+  }
+
+  @UseGuards(AuthAdminGuard)
+  @Get('no/login')
+  async getAllactorNoPage(): Promise<any> {
+    const getAll = await this.actorService.getAllactorNoPage();
+    return {
+      getAll,
+    };
+  }
+
+  @UseGuards(AuthAdminGuard)
+  @Get('')
+  async getAll(@Query('page') page: number): Promise<any> {
+    const getAll = await this.actorService.getAllactor(page);
+    return {
+      getAll,
+    };
   }
 
   @UseGuards(AuthAdminGuard)
@@ -116,10 +122,13 @@ export class ActorController {
 
   @UseGuards(AuthAdminGuard)
   @Delete(':id')
-  async deleteActor(@Param('id') id: any): Promise<any> {
+  async deleteActor(
+    @Param('id') id: any,
+    @Query('password') password: any,
+  ): Promise<any> {
     try {
-      const deleteactor = await this.actorService.deleteActor(id);
-      await this.actorService.deleteActor(id);
+      const deleteactor = await this.actorService.deleteActor(id, password);
+      await this.actorService.deleteActor(id, password);
       return {
         deleteactor,
       };

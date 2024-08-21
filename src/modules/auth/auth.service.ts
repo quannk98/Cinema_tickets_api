@@ -24,6 +24,7 @@ import { AdminReponsitory } from 'src/repositories/admin.reponsitory';
 import { AdminDto } from './dto/admin.dto';
 import { Admin } from 'src/schemas/admin.schema';
 import { StaffDto } from './dto/staff.dto';
+import { Cron } from '@nestjs/schedule';
 
 @Injectable()
 export class AuthService {
@@ -70,34 +71,35 @@ export class AuthService {
     return user;
   }
 
-  async login(loginDto: LoginDto): Promise<any> {
-   
-      const user = await this.userReponsitory.findByEmail(loginDto.email);
+  async login(loginDto: LoginDto, tokendevice: string): Promise<any> {
+    const user = await this.userReponsitory.findByEmailLogin(
+      loginDto.email,
+      tokendevice,
+    );
 
-      if (!user) throw new UnauthorizedException('Invalid email or password');
-      const isPasswordMathed = await bcrypt.compare(
-        loginDto.password,
-        user.password,
-      );
+    if (!user) throw new UnauthorizedException('Invalid email or password');
+    const isPasswordMathed = await bcrypt.compare(
+      loginDto.password,
+      user.password,
+    );
 
-      if (!isPasswordMathed) {
-        throw new UnauthorizedException('Invalid email or password');
-      } else if (user.status !== EUserStatus.ACTIVE) {
-        throw new HttpException(
-          {
-            statusCode: HttpStatus.FORBIDDEN,
-            message: 'Account has not been activated',
-            error: 'Forbidden',
-            data: {
-              status: user.status,
-            },
+    if (!isPasswordMathed) {
+      throw new UnauthorizedException('Invalid email or password');
+    } else if (user.status !== EUserStatus.ACTIVE) {
+      throw new HttpException(
+        {
+          statusCode: HttpStatus.FORBIDDEN,
+          message: 'Account has not been activated',
+          error: 'Forbidden',
+          data: {
+            status: user.status,
           },
-          HttpStatus.FORBIDDEN,
-        );
-      }
+        },
+        HttpStatus.FORBIDDEN,
+      );
+    }
 
-      return user;
-   
+    return user;
   }
   async registerEmailVerify(
     userId: string,
@@ -123,9 +125,10 @@ export class AuthService {
         userId,
         registerEmailVerifyDto.code,
       );
-      return user.data;
+      return user;
+    } else {
+      return 'Otp invail';
     }
-    throw new ConflictException('Otp invalid');
   }
 
   async findEmail(email: any): Promise<any> {
@@ -134,48 +137,39 @@ export class AuthService {
   }
 
   async sendOtp(userId: any, userEmail: string): Promise<any> {
-    try {
-      const otp = speakeasy.totp({
-        secret: JWT_SECRET,
-        digits: 6,
-      });
+    const otp = speakeasy.totp({
+      secret: JWT_SECRET,
+      digits: 6,
+    });
 
-      await this.emailService.sendEmail(
-        userEmail,
-        'Cinema Ticket Account Email Verification',
-        `Your OTP is: ${otp}`,
-      );
-      await this.userOtpReponsitory.createUserEmailOtp({
-        userId,
-        code: otp,
-      });
-      return otp;
-    } catch (error) {
-      console.log('error ', error);
-    }
+    await this.emailService.sendEmail(
+      userEmail,
+      'Cinema Ticket Account Email Verification',
+      `Your OTP is: ${otp}`,
+    );
+    await this.userOtpReponsitory.createUserEmailOtp({
+      userId,
+      code: otp,
+    });
+    return otp;
   }
 
   async sendOtpForgotPassword(userId: any, userEmail: string): Promise<any> {
-    try {
-      const otp = speakeasy.totp({
-        secret: JWT_SECRET,
-        digits: 6,
-      });
+    const otp = speakeasy.totp({
+      secret: JWT_SECRET,
+      digits: 6,
+    });
 
-      await this.emailService.sendEmail(
-        userEmail,
-        'Cinema Ticket Account Email Verification',
-        `Your OTP is: ${otp}`,
-      );
-      await this.userOtpReponsitory.ForgotPassword({
-        userId,
-        code: otp,
-
-      });
-      return otp;
-    } catch (error) {
-      console.log('error ', error);
-    }
+    await this.emailService.sendEmail(
+      userEmail,
+      'Cinema Ticket Account Email Verification',
+      `Your OTP is: ${otp}`,
+    );
+    await this.userOtpReponsitory.ForgotPassword({
+      userId,
+      code: otp,
+    });
+    return otp;
   }
 
   async ForgotPasswordEmailVerify(
@@ -198,22 +192,24 @@ export class AuthService {
       );
 
       return valiOtp;
-    }
-    else{
-      return 'Otp invail'
+    } else {
+      return 'Otp invail';
     }
   }
 
   async NewPassword(userId: any, password: any): Promise<any> {
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    const update = await this.userReponsitory.updatePassword(userId,hashedPassword );
+    const update = await this.userReponsitory.updatePassword(
+      userId,
+      hashedPassword,
+    );
     return update;
   }
 
-  async getAllUser(): Promise<any> {
-    const getAll = await this.userReponsitory.getAllUser();
-    return getAll.data;
+  async getAllUser(page: number): Promise<any> {
+    const getAll = await this.userReponsitory.getAllUser(page);
+    return getAll;
   }
 
   async getUser(userId: any): Promise<any> {
@@ -248,74 +244,68 @@ export class AuthService {
     return update;
   }
 
-  async deleteUser(userId: any): Promise<any> {
-    try {
-      const deleteuser = await this.userReponsitory.deleteUserById(userId);
-      return deleteuser.data;
-    } catch (error) {
-      return error.response;
-    }
+  async deleteUser(userId: any, passowrd: any): Promise<any> {
+    const deleteuser = await this.userReponsitory.deleteUserById(
+      userId,
+      passowrd,
+    );
+    return deleteuser;
   }
 
   async createAdmin(adminDto: AdminDto): Promise<any> {
-    try {
-      const createadmin: any = {
-        name: adminDto.name,
-        password: adminDto.password,
-      };
+    const createadmin: any = {
+      name: adminDto.name,
+      password: adminDto.password,
+    };
 
-      const createAdmin = await this.adminReponsitory.createAdmin(createadmin);
+    const createAdmin = await this.adminReponsitory.createAdmin(createadmin);
 
-      return createAdmin.data;
-    } catch (error) {
-      return error.response;
-    }
+    return createAdmin;
   }
   async loginAdmin(adminDto: AdminDto): Promise<Admin> {
-    try {
-      const admin = await this.adminReponsitory.loginAdmin(adminDto.name);
-      if (!admin) throw new UnauthorizedException('Invalid name or password');
-      if (!adminDto.password.match(admin.data.password))
-        throw new UnauthorizedException('Invalid name or password');
-      return admin.data;
-    } catch (error) {
-      return error.response;
-    }
+    const admin = await this.adminReponsitory.loginAdmin(adminDto.name);
+    if (!admin) throw new UnauthorizedException('Invalid name or password');
+    if (adminDto.password != admin.password)
+      throw new UnauthorizedException('Invalid name or password');
+    return admin;
   }
 
   async createStaff(staffDto: StaffDto): Promise<any> {
-    try {
-      const hashedPassword = await bcrypt.hash(staffDto.password, 10);
-      const datacreate: any = {
-        ...staffDto,
-        password: hashedPassword,
-        image: staffDto.image,
-        role: EUserRole.Staff,
-        status: EUserStatus.ACTIVE,
-        email_verify: true,
-      };
-      const create = await this.userReponsitory.createStaff(datacreate);
-      return create.data;
-    } catch (error) {
-      return error.response;
-    }
+    const hashedPassword = await bcrypt.hash(staffDto.password, 10);
+    const datacreate: any = {
+      ...staffDto,
+      password: hashedPassword,
+      image: staffDto.image,
+      role: EUserRole.Staff,
+      status: EUserStatus.ACTIVE,
+      email_verify: true,
+    };
+    const create = await this.userReponsitory.createStaff(datacreate);
+    return create;
   }
 
-  async getAllStaff(): Promise<any> {
-    try {
-      const getall = await this.userReponsitory.getAllStaff();
-      return getall;
-    } catch (error) {
-      return error.response;
-    }
+  async getAllStaff(page: number): Promise<any> {
+    const getall = await this.userReponsitory.getAllStaff(page);
+    return getall;
   }
 
   async getStaff(staffId: any): Promise<any> {
-    try {
-      const getstaff = await this.userReponsitory.getStaff(staffId);
-      return getstaff;
-    } catch (error) {
-      return error.response;
-    }
+    const getstaff = await this.userReponsitory.getStaff(staffId);
+    return getstaff;
+  }
+
+  @Cron('45 * * * * *')
+  async DeleteOtp(): Promise<any> {
+    await this.userOtpReponsitory.deleteOtp();
+  }
+
+  async UpdateStatusStaff(staffId: any): Promise<any> {
+    const update = await this.userReponsitory.UpdateStatusStaff(staffId);
+    return update;
+  }
+
+  async updateStatusUser(userId: any): Promise<any> {
+    const update = await this.userReponsitory.updateStatusUser(userId);
+    return update;
   }
 }

@@ -1,7 +1,7 @@
-import { Injectable } from '@nestjs/common';
+import { ConflictException, Injectable } from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
-import { ESeatStatus } from 'src/common/enums/user.enum';
+import { ESeatStatus, EUserStatus } from 'src/common/enums/user.enum';
 import { SeatDto } from 'src/modules/seat/dto/seat.dto';
 import { Seat } from 'src/schemas/seat.schema';
 
@@ -17,22 +17,15 @@ export class SeatReponsitory {
         name: seatDto.name,
         room: seatDto.room,
       });
-      if (existsSeat) {
-        return 'Seat already exists';
-      }
+      if (existsSeat) throw new ConflictException('Seat already exists');
       const createseat = new this.seatModel(seatDto);
       if (!createseat) {
-        return {
-          status: 'error',
-          message: 'Create Failed',
-        };
+        return 'Create Failed';
       }
-      return {
-        data: createseat.save(),
-        message: 'Successfully',
-      };
+      createseat.save();
+      return createseat;
     } catch (error) {
-      return error.reponse;
+      return error.message;
     }
   }
 
@@ -52,6 +45,7 @@ export class SeatReponsitory {
         ],
       },
     ]);
+
     return getAll;
   }
   async getSeatByRoom(roomId: any): Promise<any> {
@@ -89,10 +83,7 @@ export class SeatReponsitory {
       },
     ]);
     if (!getSeat) {
-      return {
-        status: 'error',
-        message: 'Get Failed',
-      };
+      return 'Get Failed';
     }
     return getSeat;
   }
@@ -102,21 +93,46 @@ export class SeatReponsitory {
       new: true,
     });
     if (!update) {
-      return {
-        status: 'error',
-        message: 'Update Failed',
-      };
+      return 'Update Failed';
     }
     return update;
   }
 
-  async deleteSeat(seatId: any): Promise<any> {
+  async updateSeatStatus(seatId: any): Promise<any> {
+    const seat = await this.seatModel.findById(seatId);
+    if (seat.status === ESeatStatus.OPEN) {
+      const update = await this.seatModel.findByIdAndUpdate(
+        seatId,
+        { status: ESeatStatus.CLOSE },
+        {
+          new: true,
+        },
+      );
+      if (!update) {
+        throw new Error('Update faild');
+      }
+      return update;
+    }
+    const update = await this.seatModel.findByIdAndUpdate(
+      seatId,
+      { status: ESeatStatus.OPEN },
+      {
+        new: true,
+      },
+    );
+    if (!update) {
+      throw new Error('Update faild');
+    }
+    return update;
+  }
+
+  async deleteSeat(seatId: any, password: any): Promise<any> {
+    if (password != '8888') {
+      return 'You do not have sufficient authority to delete';
+    }
     const deleteseat = await this.seatModel.findByIdAndDelete(seatId);
     if (!deleteseat) {
-      return {
-        status: 'error',
-        message: 'Delete Failed',
-      };
+      return 'Delete Failed';
     }
     return deleteseat;
   }

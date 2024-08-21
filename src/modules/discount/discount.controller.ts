@@ -49,12 +49,18 @@ export class DiscountController {
     @UploadedFile() image: Express.Multer.File,
   ): Promise<any> {
     try {
+      if (image === undefined) {
+        return 'Found Image';
+      }
+      if (discountDto.cinema === undefined) {
+        return 'Error Not Cinema';
+      }
       const dataCreate = {
         ...discountDto,
+        // cinema: JSON.parse(discountDto.cinema),
         code: generateRandomCode(6),
         image: image.filename,
       };
-      console.log('a', dataCreate);
       const create = await this.discountService.createDiscount(dataCreate);
       return {
         create,
@@ -64,28 +70,75 @@ export class DiscountController {
     }
   }
 
-  @UseGuards(AuthGuard)
-  @Get('')
-  async getAllUser(): Promise<any> {
-    const getall = await this.discountService.getAll();
-    return {
-      getall,
-    };
-  }
-
-  @UseGuards(AuthGuard)
-  @Get(':id')
-  async getDiscount(@Param('id') id: any): Promise<any> {
-    const getDiscount = await this.discountService.getdiscount(id);
+  @UseGuards(AuthAdminGuard)
+  @Get('type')
+  async getType(@Query('type') type: any): Promise<any> {
+    const getDiscount = await this.discountService.getdiscountbytype(type);
     return {
       getDiscount,
     };
   }
 
   @UseGuards(AuthAdminGuard)
-  @Get('type')
-  async getType(@Query('type') type: any): Promise<any> {
-    const getDiscount = await this.discountService.getdiscountbytype(type);
+  @Put('status/:id')
+  async UpdateStatusDiscount(@Param('id') id: any): Promise<any> {
+    const update = await this.discountService.updateDiscountStatus(id);
+    return update;
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('check/code')
+  async checkCodeDiscount(
+    @Query('code') code: any,
+    @Query('cinemaId') cinemaId: any,
+  ): Promise<any> {
+    const discount = await this.discountService.checkCodeDiscount(
+      code,
+      cinemaId,
+    );
+    return discount;
+  }
+
+
+  @UseGuards(AuthAdminGuard)
+  @Get('admin')
+  async getAllForAdmin(@Query('page') page: number): Promise<any> {
+    const getall = await this.discountService.getAllForAdmin(page);
+    return {
+      getall,
+    };
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('user')
+  async getAllForUser(): Promise<any> {
+    const getall = await this.discountService.getAllForUser();
+    return {
+      getall,
+    };
+  }
+
+  
+  @Get('no/login')
+  async getAllNoLogin(): Promise<any> {
+    const getall = await this.discountService.getAllForUser();
+    return {
+      getall,
+    };
+  }
+
+
+  @Get('no/login/:id')
+  async getDiscountNoLogin(@Param('id') id: any): Promise<any> {
+    const getDiscount = await this.discountService.getdiscount(id);
+    return {
+      getDiscount,
+    };
+  }
+  @UseGuards(AuthGuard)
+  @Get(':id')
+  async getDiscount(@Param('id') id: any): Promise<any> {
+    const getDiscount = await this.discountService.getdiscount(id);
     return {
       getDiscount,
     };
@@ -138,9 +191,15 @@ export class DiscountController {
 
   @UseGuards(AuthAdminGuard)
   @Delete(':id')
-  async deleteDisount(@Param('id') id: any): Promise<any> {
-    const deletediscount = await this.discountService.deleteDiscount(id);
-    await this.discountService.deleteDiscount(id);
+  async deleteDisount(
+    @Param('id') id: any,
+    @Query('password') password: any,
+  ): Promise<any> {
+    const deletediscount = await this.discountService.deleteDiscount(
+      id,
+      password,
+    );
+    await this.discountService.deleteDiscount(id, password);
     return {
       deletediscount,
     };

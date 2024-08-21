@@ -22,5 +22,5 @@ export class StaffDto{
     @IsString()
     readonly image: string
 
-   
+    
 }

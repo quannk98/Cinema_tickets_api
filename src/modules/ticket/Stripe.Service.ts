@@ -12,14 +12,15 @@ export class StripeService {
 
   async createPaymentIntent(paymentDto: PaymentDto): Promise<any> {
     const payment = await this.stripe.paymentIntents.create({
-      amount: paymentDto.amount * 100,
+      amount: paymentDto.amount,
       currency: 'usd',
       payment_method_types: ['card'],
       metadata: { name: paymentDto.name },
     });
-    if (!payment){
-      return ("Payment Falied")
+    if (!payment) {
+      return 'Payment Falied';
     }
-    return payment;
+    const clientSecret = payment.client_secret;
+    return clientSecret;
   }
 }

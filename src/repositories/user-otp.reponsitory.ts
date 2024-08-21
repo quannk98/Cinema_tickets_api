@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { EOtpType } from 'src/common/enums/auth.enum';
@@ -12,41 +16,29 @@ export class UserOtpReponsitory {
   ) {}
   async createUserEmailOtp(otpCreateData: IUserOtp): Promise<any> {
     const createUserDto = new this.userOtpModel(otpCreateData);
-    if (!createUserDto) {
-      return {
-        status: 'error',
-        message: 'Create User OTP Failed',
-      };
-    }
+    if (!createUserDto) throw new ConflictException('Otp already exists');
     return createUserDto.save();
   }
 
   async findByUserAndCode(userId: any, code: string): Promise<any> {
     const userOtp = await this.userOtpModel.findOne({
-      userId,
-      code,
+      userId: userId,
+      code: code,
       type: EOtpType.register,
     });
-    if (!userOtp) {
-      return {
-        status: 'error',
-        message: 'Find Code Failed',
-      };
-    }
+    if (!userOtp) throw new UnauthorizedException('Find Code Failed');
+
     return userOtp;
   }
 
   async ForgotPassword(otpCreateData: IUserOtp): Promise<any> {
     const data = {
       ...otpCreateData,
-      type:EOtpType.fotgotpassword
-    }
+      type: EOtpType.fotgotpassword,
+    };
     const createFP = new this.userOtpModel(data);
     if (!createFP) {
-      return {
-        status: 'error',
-        message: 'Create User OTP Failed',
-      };
+      return 'Create User OTP Failed';
     }
     return createFP.save();
   }
@@ -57,12 +49,7 @@ export class UserOtpReponsitory {
       code,
       type: EOtpType.fotgotpassword,
     });
-    if (!userOtpFP) {
-      return {
-        status: 'error',
-        message: 'Find Code Failed',
-      };
-    }
+    if (!userOtpFP) throw new UnauthorizedException('Find Code Failed');
     return userOtpFP;
   }
 
@@ -73,10 +60,7 @@ export class UserOtpReponsitory {
       type: EOtpType.register,
     });
     if (!deleteCode) {
-      return {
-        status: 'error',
-        message: 'Delete Failed',
-      };
+      return 'Delete Failed';
     }
     return deleteCode;
   }
@@ -88,11 +72,16 @@ export class UserOtpReponsitory {
       type: EOtpType.fotgotpassword,
     });
     if (!deleteCode) {
-      return {
-        status: 'error',
-        message: 'Delete Failed',
-      };
+      return 'Delete Failed';
     }
     return deleteCode;
+  }
+
+  async deleteOtp(): Promise<any> {
+    const tenMinutesAgo = new Date(Date.now() - 1 * 60 * 1000);
+  
+    await this.userOtpModel.deleteMany({
+      created_at: { $lt: tenMinutesAgo },
+    });
   }
 }

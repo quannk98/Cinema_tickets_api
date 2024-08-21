@@ -29,5 +29,11 @@ export class User {
   readonly role: string;
   @Prop({ type: String, enum: EUserStatus, default: EUserStatus.INACTIVE })
   readonly status: EUserStatus;
+  @Prop()
+  readonly tokendevice: string;
+  // @Prop({type:Date,default:() => Date.now()})
+  // readonly create_at:Date
+  // @Prop({type:Date,default:() => Date.now()})
+  // readonly create_at:Date
 }
 export const UserSchema = SchemaFactory.createForClass(User);

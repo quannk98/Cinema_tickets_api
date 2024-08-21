@@ -8,13 +8,19 @@ export class ActorService {
   constructor(private readonly actorReponsitory: ActorReponsitory) {}
   async createActor(actorDto: ActorDto): Promise<Actor> {
     const actor = await this.actorReponsitory.createActor(actorDto);
-    return actor.data;
+    return actor;
   }
 
-  async getAllactor(): Promise<Actor> {
-    const getall = await this.actorReponsitory.getAllactor();
+  async getAllactor(page: number): Promise<any> {
+    const getall = await this.actorReponsitory.getAllactor(page);
     return getall;
   }
+
+  async getAllactorNoPage(): Promise<any> {
+    const getall = await this.actorReponsitory.getAllactorNoPage();
+    return getall;
+  }
+
   async getactor(actorId: any): Promise<Actor> {
     const getActor = await this.actorReponsitory.getactor(actorId);
     return getActor;
@@ -28,8 +34,11 @@ export class ActorService {
     return update;
   }
 
-  async deleteActor(actorId: any): Promise<Actor> {
-    const deleteDirector = await this.actorReponsitory.deleteActor(actorId);
+  async deleteActor(actorId: any, password: any): Promise<Actor> {
+    const deleteDirector = await this.actorReponsitory.deleteActor(
+      actorId,
+      password,
+    );
     return deleteDirector;
   }
 }

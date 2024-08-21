@@ -53,33 +53,35 @@ export class AuthController {
     @Request() req,
     @Body() registerEmailVerifyDto: RegisterEmailVerifyDto,
   ): Promise<any> {
-    await this.authService.registerEmailVerify(
+    const checkOtp = await this.authService.registerEmailVerify(
       req.user.sub,
       req.user.email,
       registerEmailVerifyDto,
     );
-    return {
-      statusCode: 200,
-      message: 'Otp authentication successful',
-    };
+
+    if (checkOtp) {
+      return 'Otp success';
+    } else {
+      return checkOtp;
+    }
   }
 
   @Post('login')
-  async login(@Body() loginDto: LoginDto): Promise<any> {
+  async login(
+    @Body() loginDto: LoginDto,
+    @Query('tokendevice') tokendevice: string,
+  ): Promise<any> {
     try {
-      const user = await this.authService.login(loginDto);
-      if(user){
+      const user = await this.authService.login(loginDto, tokendevice);
+      if (user) {
         const token = await this.authService.generateJwtToken(user);
         return {
           user,
           token,
         };
+      } else {
+        return user;
       }
-      else{
-        return user
-      }
-
-     
     } catch (error) {
       return error.response;
     }
@@ -99,15 +101,15 @@ export class AuthController {
   }
   @Post('login-admin')
   async loginAdmin(@Body() adminDto: AdminDto): Promise<any> {
-    try {
-      const admin = await this.authService.loginAdmin(adminDto);
+    const admin = await this.authService.loginAdmin(adminDto);
+    if (!admin) {
+      return admin;
+    } else {
       const token = await this.authService.generateJwtTokenAdmin(admin);
       return {
         admin,
         token,
       };
-    } catch (error) {
-      return error.response;
     }
   }
 
@@ -133,14 +135,12 @@ export class AuthController {
       req.user.email,
       registerEmailVerifyDto,
     );
-    if(checkOtp){
-      return 'Otp success'
-      
+
+    if (checkOtp) {
+      return 'Otp success';
+    } else {
+      return checkOtp;
     }
-    else{
-      return checkOtp
-    }
-    
   }
 }
 
@@ -165,6 +165,12 @@ export class UserController {
     @Body() staffDto: StaffDto,
     @UploadedFile() image: Express.Multer.File,
   ): Promise<any> {
+    if (image === undefined) {
+      const create = await this.authService.createStaff(staffDto);
+      return {
+        create,
+      };
+    }
     const data = {
       ...staffDto,
       image: image.filename,
@@ -177,16 +183,16 @@ export class UserController {
 
   @UseGuards(AuthAdminGuard)
   @Get('')
-  async getAllUser(): Promise<any> {
-    const getAll = await this.authService.getAllUser();
+  async getAllUser(@Query('page') page: number): Promise<any> {
+    const getAll = await this.authService.getAllUser(page);
     return {
       getAll,
     };
   }
   @UseGuards(AuthGuard)
   @Get('staff')
-  async getAllStaffAdmin(): Promise<any> {
-    const getall = await this.authService.getAllStaff();
+  async getAllStaffAdmin(@Query('page') page: number): Promise<any> {
+    const getall = await this.authService.getAllStaff(page);
     return {
       getall,
     };
@@ -244,6 +250,19 @@ export class UserController {
       return update;
     }
   }
+  @UseGuards(AuthGuard)
+  @Put('status/:id')
+  async updateStatusUser(@Param('id') id: any): Promise<any> {
+    const update = await this.authService.updateStatusUser(id);
+    return update;
+  }
+
+  @UseGuards(AuthGuard)
+  @Put('staff/status/:id')
+  async UpdateStatusStaff(@Param('id') id: any): Promise<any> {
+    const update = await this.authService.UpdateStatusStaff(id);
+    return update;
+  }
 
   @UseGuards(AuthGuard)
   @Put('password/:id')
@@ -261,9 +280,12 @@ export class UserController {
 
   @UseGuards(AuthAdminGuard)
   @Delete(':id')
-  async DeleteUser(@Param('id') id: any): Promise<any> {
-    const deleteuser = await this.authService.deleteUser(id);
-    await this.authService.deleteUser(id);
+  async DeleteUser(
+    @Param('id') id: any,
+    @Query('password') password: any,
+  ): Promise<any> {
+    const deleteuser = await this.authService.deleteUser(id, password);
+    await this.authService.deleteUser(id, password);
     return {
       deleteuser,
     };

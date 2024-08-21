@@ -17,18 +17,64 @@ import { Showtime, ShowtimeSchema } from 'src/schemas/showtime.schema';
 import { Movie, MovieScheme } from 'src/schemas/movie.schema';
 import { Time, TimeSchema } from 'src/schemas/time.schema';
 import { Seatstatus, SeatstatusSchema } from 'src/schemas/seatstatus.schema';
-
+import {
+  Notification,
+  NotificationSchema,
+} from 'src/schemas/notification.schema';
+import { NotificationService } from '../notification/notification.service';
+import { NotificationReponsitory } from 'src/repositories/notification.reponsitory';
+import { User, UserSchema } from 'src/schemas/user.schema';
+import { NotificationGateway } from '../notification/notification.gateway';
+import { NotificationModule } from '../notification/notification.module';
+import * as admin from 'firebase-admin';
+import * as path from 'path';
+import { FcmNotificationService } from '../firebase_notification/firebase.service';
+import { UserRepository } from 'src/repositories/user.reponsitory';
+import { UserOtpReponsitory } from 'src/repositories/user-otp.reponsitory';
+import { UserOtp, UserOtpSchema } from 'src/schemas/user-otp.schema';
 
 @Module({
   imports: [
-    MongooseModule.forFeature([{ name: Ticket.name, schema: TicketSchema },{name:Seat.name,schema:SeatSchema},{name:Cinema.name,schema:CinemaSchema}
-      ,{name:Room.name,schema:RoomSchema},{name:Showtime.name,schema:ShowtimeSchema},{name:Movie.name,schema:MovieScheme},
-      {name:Time.name,schema:TimeSchema},{name:Seatstatus.name,schema:SeatstatusSchema}]),
-    ConfigModule.forRoot({envFilePath: '.evn'}),
-    ScheduleModule.forRoot()
-    
+    MongooseModule.forFeature([
+      { name: Ticket.name, schema: TicketSchema },
+      { name: Seat.name, schema: SeatSchema },
+      { name: Cinema.name, schema: CinemaSchema },
+      { name: Room.name, schema: RoomSchema },
+      { name: Showtime.name, schema: ShowtimeSchema },
+      { name: Movie.name, schema: MovieScheme },
+      { name: Time.name, schema: TimeSchema },
+      { name: Seatstatus.name, schema: SeatstatusSchema },
+      { name: Notification.name, schema: NotificationSchema },
+      { name: User.name, schema: UserSchema },
+      { name: UserOtp.name, schema: UserOtpSchema }
+    ]),
+    ConfigModule.forRoot({ envFilePath: '.evn' }),
+    ScheduleModule.forRoot(),
   ],
-  providers: [TicketReponsitory, TicketService,StripeService,SeatReponsitory],
+  providers: [
+    TicketReponsitory,
+    TicketService,
+    StripeService,
+    SeatReponsitory,
+    NotificationService,
+    NotificationReponsitory,
+    NotificationGateway,
+    FcmNotificationService,
+    UserRepository,
+    UserOtpReponsitory
+    // {
+    //   provide: 'FirebaseAdmin',
+    //   useFactory: async () => {
+    //     const cwd = process.cwd();
+    //     const serviceAccountPath = path.join(cwd, 'public/serviceAccountKey.json');
+    //     await admin.initializeApp({
+    //       credential: admin.credential.cert(serviceAccountPath),
+    //     });
+    //     return admin.app();
+    //   },
+    // },
+  ],
+
   controllers: [TicketController],
 })
 export class TicketModule {}

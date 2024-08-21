@@ -7,6 +7,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 
@@ -38,15 +39,11 @@ export class CinemaController {
   async getAll(): Promise<any> {
     try {
       const getAll = await this.cinemaService.getAllcinema();
-      return {
-        getAll,
-      };
+      return getAll;
     } catch (error) {
       console.log('error ', error);
     }
   }
-
- 
 
   @UseGuards(AuthGuard)
   @Get(':id')
@@ -79,10 +76,13 @@ export class CinemaController {
 
   @UseGuards(AuthAdminGuard)
   @Delete(':id')
-  async deleteCinema(@Param('id') id: any): Promise<any> {
+  async deleteCinema(
+    @Param('id') id: any,
+    @Query('password') password: any,
+  ): Promise<any> {
     try {
-      const deletecinema = await this.cinemaService.deleteCinema(id);
-      await this.cinemaService.deleteCinema(id);
+      const deletecinema = await this.cinemaService.deleteCinema(id, password);
+      await this.cinemaService.deleteCinema(id, password);
       return {
         deletecinema,
       };

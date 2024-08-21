@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   Res,
   UploadedFile,
   UseGuards,
@@ -62,16 +63,21 @@ export class DirectorController {
 
   @UseGuards(AuthAdminGuard)
   @Get('')
-  async getAll(): Promise<any> {
+  async getAll(@Query('page') page: number): Promise<any> {
     try {
-      const getAll = await this.directorService.getAlldirector();
-      return {
-        data: {
-          getAll,
-        },
-        statusCode: 200,
-        message: 'Get all director success',
-      };
+      const getAll = await this.directorService.getAlldirector(page);
+      return getAll;
+    } catch (error) {
+      console.log('error ', error);
+    }
+  }
+
+  @UseGuards(AuthAdminGuard)
+  @Get('no/login')
+  async getAlldirectorNoPage(): Promise<any> {
+    try {
+      const getAll = await this.directorService.getAlldirectorNoPage();
+      return getAll;
     } catch (error) {
       console.log('error ', error);
     }
@@ -134,10 +140,16 @@ export class DirectorController {
 
   @UseGuards(AuthAdminGuard)
   @Delete(':id')
-  async deleteDirector(@Param('id') id: any): Promise<any> {
+  async deleteDirector(
+    @Param('id') id: any,
+    @Query('password') password: any,
+  ): Promise<any> {
     try {
-      const deletedirector = await this.directorService.deleteDirector(id);
-      await this.directorService.deleteDirector(id);
+      const deletedirector = await this.directorService.deleteDirector(
+        id,
+        password,
+      );
+      await this.directorService.deleteDirector(id, password);
       return {
         deletedirector,
       };

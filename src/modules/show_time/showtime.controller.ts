@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 
@@ -39,9 +40,9 @@ export class ShowtimeController {
 
   @UseGuards(AuthAdminGuard)
   @Get('')
-  async getAll(): Promise<any> {
+  async getAll(@Query('page') page: number): Promise<any> {
     try {
-      const getAll = await this.showtimeService.getAllshowtime();
+      const getAll = await this.showtimeService.getAllshowtime(page);
       return {
         getAll,
       };
@@ -49,6 +50,20 @@ export class ShowtimeController {
       console.log('error ', error);
     }
   }
+
+  @UseGuards(AuthAdminGuard)
+  @Get('user')
+  async getAllShowtimeUser(): Promise<any> {
+    try {
+      const getAll = await this.showtimeService.getAllShowtimeUser();
+      return {
+        getAll,
+      };
+    } catch (error) {
+      console.log('error ', error);
+    }
+  }
+
   @UseGuards(AuthGuard)
   @Get(':id')
   async getShowtime(@Param('id') id: any): Promise<any> {
@@ -83,10 +98,13 @@ export class ShowtimeController {
 
   @UseGuards(AuthAdminGuard)
   @Delete(':id')
-  async deleteShowtime(@Param('id') id: any): Promise<any> {
+  async deleteShowtime(
+    @Param('id') id: any,
+    @Query('password') password: any,
+  ): Promise<any> {
     try {
-      const deletest = await this.showtimeService.deleteShowtime(id);
-      await this.showtimeService.deleteShowtime(id);
+      const deletest = await this.showtimeService.deleteShowtime(id, password);
+      await this.showtimeService.deleteShowtime(id, password);
       return {
         deletest,
       };

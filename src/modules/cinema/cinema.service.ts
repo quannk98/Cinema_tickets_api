@@ -8,12 +8,8 @@ import { Cinema } from 'src/schemas/cinema.schema';
 export class CinemaService {
   constructor(private readonly cinemaReponsitory: CinemaReponsitory) {}
   async createCinema(cinemaDto: CinemaDto): Promise<Cinema> {
-    try { 
-      const cinema = await this.cinemaReponsitory.createCinema(cinemaDto);
-      return cinema;
-    } catch (error) {
-      return error.response
-    }
+    const cinema = await this.cinemaReponsitory.createCinema(cinemaDto);
+    return cinema;
   }
 
   async getAllcinema(): Promise<Cinema> {
@@ -25,6 +21,8 @@ export class CinemaService {
     return getCinema;
   }
 
+
+
   async updateCinema(cinemaId: any, cinemaDto: CinemaDto): Promise<Cinema> {
     const update = await this.cinemaReponsitory.updateCinema(cinemaId, {
       name: cinemaDto.name,
@@ -34,8 +32,8 @@ export class CinemaService {
     return update;
   }
 
-  async deleteCinema(cinemaId: any): Promise<Cinema> {
-    const deleteCinema = await this.cinemaReponsitory.deleteCinema(cinemaId);
+  async deleteCinema(cinemaId: any,password:any): Promise<Cinema> {
+    const deleteCinema = await this.cinemaReponsitory.deleteCinema(cinemaId,password);
     return deleteCinema;
   }
 }

@@ -8,11 +8,15 @@ export class MovieService {
   constructor(private readonly movieReponsitory: MovieReponsitory) {}
   async create(movieDto: MovieDto): Promise<any> {
     const createMovie = await this.movieReponsitory.create(movieDto);
-    return createMovie.data;
+    return createMovie;
   }
 
-  async getAll(): Promise<any> {
-    const getAll = await this.movieReponsitory.getAllmovie();
+  async getAllmovieForAdmin(page: number): Promise<any> {
+    const getAll = await this.movieReponsitory.getAllmovieForAdmin(page);
+    return getAll;
+  }
+  async getAllmovieForUser(): Promise<any> {
+    const getAll = await this.movieReponsitory.getAllmovieForUser();
     return getAll;
   }
   async getMovie(movieId: any): Promise<any> {
@@ -34,8 +38,8 @@ export class MovieService {
     return search;
   }
 
-  async getMovieBygenre(genre: any): Promise<any> {
-    const getMovie = await this.movieReponsitory.getMovieByGenre(genre);
+  async getMovieBygenre(genreId: any): Promise<any> {
+    const getMovie = await this.movieReponsitory.getMovieByGenre(genreId);
     return getMovie;
   }
 
@@ -44,15 +48,21 @@ export class MovieService {
     await this.movieReponsitory.checkMovie();
   }
 
-  async update(movieId: any, dataUpdate: any): Promise<any> {
-    
-    const updatemovie = await this.movieReponsitory.update(movieId, dataUpdate);
-  
+  async updateMovieStopShow(movieId: any): Promise<any> {
+    const updatemovie =
+      await this.movieReponsitory.updateMovieStopShow(movieId);
+
     return updatemovie;
   }
 
-  async delete(movieId: any): Promise<any> {
-    const deletemovie = await this.movieReponsitory.delete(movieId);
+  async update(movieId: any, dataUpdate: any): Promise<any> {
+    const updatemovie = await this.movieReponsitory.update(movieId, dataUpdate);
+
+    return updatemovie;
+  }
+
+  async delete(movieId: any, password: any): Promise<any> {
+    const deletemovie = await this.movieReponsitory.delete(movieId, password);
     return deletemovie;
   }
 }

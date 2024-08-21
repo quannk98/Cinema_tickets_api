@@ -1,25 +1,41 @@
-import { IsArray, IsString } from "class-validator";
+import { IsArray, IsNumber, IsString, ValidateNested } from 'class-validator';
 
-export class TicketDto{
-    @IsArray()
-    readonly discount: string
+export class TicketDto {
+  @IsArray()
+  readonly discount: string;
 
-    @IsArray({each:true})
-    readonly seat: string
-    
-    @IsString()
-    readonly user: string
+  @IsArray({ each: true })
+  readonly seat: string;
 
-    @IsArray()
-    readonly food:string
+  @IsString({ each: true })
+  readonly user: string;
 
-    @IsString()
-    readonly showdate: string
+  @IsArray()
+  @ValidateNested({ each: true })
+  readonly food: FoodItem[];
 
-    @IsString()
-    readonly showtime: string
-    
-    @IsString()
-    readonly total: string
+  @IsString()
+  readonly showdate: string;
 
+  @IsString()
+  readonly showtime: string;
+
+  @IsNumber()
+  readonly total_food: number;
+
+  @IsNumber()
+  readonly total: number;
+
+  @IsString()
+  readonly staff: string;
+
+  @IsString()
+  readonly time_check: Date;
+}
+class FoodItem {
+  @IsString()
+  readonly foodId: string;
+
+  @IsNumber()
+  readonly quantity: number;
 }

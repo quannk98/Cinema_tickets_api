@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Firebase Cloud Messaging Demo</title>
+  <script src="https://www.gstatic.com/firebasejs/9.6.9/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.9/firebase-messaging.js"></script>
+  <script src="your-firebase-config.js"></script> <script>
+    // Initialize Firebase App
+    const firebaseConfig = {
+      // Replace with your actual Firebase project configuration
+      apiKey: "...",
+      authDomain: "...",
+      projectId: "...",
+      storageBucket: "...",
+      messagingSenderId: "...",
+      appId: "...",
+    };
+
+    firebase.initializeApp(firebaseConfig);
+
+    // Request notification permission from the user
+    const messaging = firebase.messaging();
+    messaging.requestPermission()
+      .then(() => {
+        console.log('Notification permission granted.');
+        // Get the registration token. This token can be used to send notifications to this specific device
+        messaging.getToken({ vapidKey: '...' }) // Replace with your VAPID key (optional for web push)
+          .then((currentToken) => {
+            if (currentToken) {
+              sendTokenToServer(currentToken);
+            } else {
+              console.log('No registration token available. Request permission again.');
+              messaging.requestPermission();
+            }
+          })
+          .catch((err) => {
+            console.error('An error occurred while retrieving token:', err);
+          });
+      })
+      .catch((err) => {
+        console.error('Unable to get permission to receive notifications:', err);
+      });
+
+    // Function to send the registration token to your server (optional)
+    function sendTokenToServer(currentToken) {
+      // Implement logic to send the token to your server for further processing
+      console.log('Registration token:', currentToken);
+    }
+
+    // Handle incoming messages
+    messaging.onMessage((payload) => {
+      console.log('Message received:', payload);
+      // Customize notification display based on payload data
+      const notificationTitle = payload.notification.title;
+      const notificationBody = payload.notification.body;
+      const notification = new Notification(notificationTitle, {
+        body: notificationBody,
+      });
+      notification.onclick = (event) => {
+        event.preventDefault();
+        // Handle notification click (optional)
+        window.open(payload.notification.click_action, '_blank'); // Open a link on click
+      };
+    });
+  </script>
+</head>
+<body>
+  <h1>Firebase Cloud Messaging Demo</h1>
+  <p>This page demonstrates receiving notifications from FCM.</p>
+</body>
+</html>

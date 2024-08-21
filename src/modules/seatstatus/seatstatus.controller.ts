@@ -1,4 +1,13 @@
-import { Body, Controller, Delete, Get, Param, Put, UseGuards } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Delete,
+  Get,
+  Param,
+  Put,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
 import { SeatstatusService } from './seatstatus.service';
 import { seatstatusDto } from './dto/seatstatus.dto';
 import { AuthGuard } from '../auth/auth.guard';
@@ -13,6 +22,21 @@ export class SeatstatusController {
   async getAll(): Promise<any> {
     const getall = await this.seatstatusService.getAll();
     return getall;
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('seat')
+  async getSeatStatusByRoomAndTime(
+    @Query('roomId') roomId,
+    @Query('showtimeId') showtimeId,
+    @Query('timeId') timeId,
+  ): Promise<any> {
+    const gets = await this.seatstatusService.getSeatStatusByRoomAndTime(
+      roomId,
+      showtimeId,
+      timeId,
+    );
+    return gets;
   }
 
   @UseGuards(AuthGuard)

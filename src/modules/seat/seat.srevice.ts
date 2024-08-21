@@ -8,7 +8,7 @@ export class SeatService {
   constructor(private readonly seatReponsitory: SeatReponsitory) {}
   async createSeat(timeDto: SeatDto): Promise<any> {
     const seat = await this.seatReponsitory.create(timeDto);
-    return seat.data;
+    return seat;
   }
 
   async getAllseat(): Promise<any> {
@@ -29,9 +29,13 @@ export class SeatService {
     const update = await this.seatReponsitory.updateSeat(seatId, dataUpdate);
     return update;
   }
+  async updateSeatStatus(seatId: any): Promise<any> {
+    const update = await this.seatReponsitory.updateSeatStatus(seatId);
+    return update;
+  }
 
-  async deleteSeat(seatId: any): Promise<any> {
-    const deleteSeat = await this.seatReponsitory.deleteSeat(seatId);
+  async deleteSeat(seatId: any, password: any): Promise<any> {
+    const deleteSeat = await this.seatReponsitory.deleteSeat(seatId, password);
     return deleteSeat;
   }
 }

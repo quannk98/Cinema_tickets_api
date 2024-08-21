@@ -11,6 +11,8 @@ import { UserOtpReponsitory } from 'src/repositories/user-otp.reponsitory';
 import { AuthController, UserController } from './auth.controller';
 import { AdminReponsitory } from 'src/repositories/admin.reponsitory';
 import { Admin, AdminSchema } from 'src/schemas/admin.schema';
+import { NotificationModule } from '../notification/notification.module';
+import { TypeOrmModule } from '@nestjs/typeorm';
 
 
 @Module({
@@ -23,6 +25,7 @@ import { Admin, AdminSchema } from 'src/schemas/admin.schema';
       secret: JWT_SECRET,
       signOptions: { expiresIn: JWT_EXPIRE },
     }),
+   
   ],
   providers: [AuthService, EmailService, UserRepository, UserOtpReponsitory,AdminReponsitory],
   controllers: [AuthController,UserController],

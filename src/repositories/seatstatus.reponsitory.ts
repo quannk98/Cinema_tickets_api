@@ -16,13 +16,24 @@ export class SeatstatusReponsitory {
   }
 
   async getSeatstatus(seatstatusId: any): Promise<any> {
-    const getss = await this.seatstatusModel.findById(seatstatusId);
-    return getss;
+    const gets = await this.seatstatusModel.findById(seatstatusId);
+    return gets;
+  }
+
+  async getSeatStatusByRoomAndTime(
+    roomId: any,
+    showtimeId: any,
+    timeId: any,
+  ): Promise<any> {
+    const gets = await this.seatstatusModel
+      .find({ room: roomId, day: showtimeId, time: timeId })
+      .populate([{ path: 'seat', select: 'name price' }]);
+    return gets;
   }
 
   async checkSeatstatus(): Promise<any> {
-    const date = Date.now() -  30 * 60 * 60 * 1000;
-    const time = new Date(date)
+    const date = Date.now() - 30 * 60 * 60 * 1000;
+    const time = new Date(date);
     const checkss = await this.seatstatusModel.find({
       date: { $lt: time },
     });

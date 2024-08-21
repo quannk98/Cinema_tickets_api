@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { TimeDto } from './dto/time.dto';
@@ -32,8 +33,17 @@ export class TimeController {
 
   @UseGuards(AuthAdminGuard)
   @Get('')
-  async getAll(): Promise<any> {
-    const getall = await this.timeService.getAlltime();
+  async getAll(@Query('page') page: number): Promise<any> {
+    const getall = await this.timeService.getAlltime(page);
+    return {
+      getall,
+    };
+  }
+
+  @UseGuards(AuthAdminGuard)
+  @Get('user')
+  async getAlltimeNoPage(): Promise<any> {
+    const getall = await this.timeService.getAlltimeNoPage();
     return {
       getall,
     };
@@ -48,7 +58,6 @@ export class TimeController {
     };
   }
 
-  
   @UseGuards(AuthAdminGuard)
   @Put(':id')
   async update(@Param('id') id: any, @Body() timeDto: TimeDto): Promise<any> {
@@ -64,9 +73,12 @@ export class TimeController {
 
   @UseGuards(AuthAdminGuard)
   @Delete(':id')
-  async deleteTime(@Param('id') id: any): Promise<any> {
-    const deletetime = await this.timeService.deleteTime(id);
-    await this.timeService.deleteTime(id);
+  async deleteTime(
+    @Param('id') id: any,
+    @Query('password') password: any,
+  ): Promise<any> {
+    const deletetime = await this.timeService.deleteTime(id, password);
+    await this.timeService.deleteTime(id, password);
     return {
       deletetime,
     };

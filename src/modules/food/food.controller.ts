@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -38,6 +39,12 @@ export class FoodController {
     @UploadedFile() image: Express.Multer.File,
   ): Promise<any> {
     try {
+      if (image === undefined) {
+        const create = await this.foodService.createFood(foodDto);
+        return {
+          create,
+        };
+      }
       const dataCreate = {
         ...foodDto,
         image: image.filename,
@@ -52,10 +59,19 @@ export class FoodController {
     }
   }
 
+  @UseGuards(AuthAdminGuard)
+  @Get('admin')
+  async getAllFoodForAdmin(@Query('page') page: number): Promise<any> {
+    const getall = await this.foodService.getAllFoodForAdmin(page);
+    return {
+      getall,
+    };
+  }
+
   @UseGuards(AuthGuard)
-  @Get('')
-  async getAllfood(): Promise<any> {
-    const getall = await this.foodService.getAll();
+  @Get('user')
+  async getAllFoodForuser(): Promise<any> {
+    const getall = await this.foodService.getAllFoodForUser();
     return {
       getall,
     };
@@ -110,10 +126,20 @@ export class FoodController {
   }
 
   @UseGuards(AuthAdminGuard)
+  @Put('status/:id')
+  async updateStatusFood(@Param('id') id: any): Promise<any> {
+    const update = await this.foodService.updateStatusFood(id);
+    return update;
+  }
+
+  @UseGuards(AuthAdminGuard)
   @Delete(':id')
-  async deleteFood(@Param('id') id: any): Promise<any> {
-    const deletetime = await this.foodService.deleteFood(id);
-    await this.foodService.deleteFood(id);
+  async deleteFood(
+    @Param('id') id: any,
+    @Query('password') password: any,
+  ): Promise<any> {
+    const deletetime = await this.foodService.deleteFood(id, password);
+    await this.foodService.deleteFood(id, password);
     return {
       deletetime,
     };

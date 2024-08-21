@@ -1,18 +1,24 @@
-import { IsString } from "class-validator";
+import { IsArray, IsNumber, IsString } from 'class-validator';
 
-export class DiscountDto{
-    @IsString()
-    readonly name: string
+export class DiscountDto {
+  @IsString()
+  readonly name: string;
 
-    @IsString()
-    readonly image: string
+  @IsString()
+  readonly image: string;
 
-    @IsString()
-    readonly percent: string
+  @IsNumber()
+  readonly percent: number;
 
-    @IsString()
-    readonly code: string
+  @IsString()
+  readonly code: string;
 
-    @IsString()
-    readonly cinema: string
+  @IsArray({ each: true })
+  readonly cinema: string;
+
+  @IsString()
+  readonly dayStart: string;
+
+  @IsString()
+  readonly dayEnd: string;
 }

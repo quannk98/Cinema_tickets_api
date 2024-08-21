@@ -12,25 +12,52 @@ export class TicketService {
   constructor(private readonly ticketReponsitory: TicketReponsitory) {}
   async createTicket(ticketDto: TicketDto): Promise<any> {
     const ticket = await this.ticketReponsitory.create(ticketDto);
-    return ticket.data;
+    return ticket;
   }
 
-  async getAll(): Promise<any> {
-    const getall = await this.ticketReponsitory.getAll();
+  async getAllTicketForAdmin(page: number): Promise<any> {
+    const getall = await this.ticketReponsitory.getAllTicketForAdmin(page);
     return getall;
   }
+
+  // async getAllTicketForUser(): Promise<any> {
+  //   const getall = await this.ticketReponsitory.getAllTicketForUser();
+  //   return getall;
+  // }
   async getticket(ticketId: any): Promise<any> {
-    try {
-      const getTicket = await this.ticketReponsitory.getTicket(ticketId);
-      return getTicket;
-    } catch (error) {
-      console.log('error', error);
-    }
+    const getTicket = await this.ticketReponsitory.getTicket(ticketId);
+    return getTicket;
   }
 
-  async getTicketByUser(userId: any): Promise<any> {
-    const getTicket = await this.ticketReponsitory.getTicketByUser(userId);
+  async getUser(userId: any): Promise<any> {
+    const tokendevice = await this.ticketReponsitory.getUser(userId);
+    return tokendevice;
+  }
+  async getTicketByUserForAdmin(userId: any, page: number): Promise<any> {
+    const getTicket = await this.ticketReponsitory.getTicketByUserForAdmin(
+      userId,
+      page,
+    );
     return getTicket;
+  }
+
+  async getTicketByUserForUser(userId: any): Promise<any> {
+    const getTicket =
+      await this.ticketReponsitory.getTicketByUserForUser(userId);
+    return getTicket;
+  }
+
+  async getTicketByStaffUser(staffId: any): Promise<any> {
+    const tickets = await this.ticketReponsitory.getTicketByStaffUser(staffId);
+    return tickets;
+  }
+
+  async getTicketByStaffAdmin(staffId: any, page: number): Promise<any> {
+    const tickets = await this.ticketReponsitory.getTicketByStaffAdmin(
+      staffId,
+      page,
+    );
+    return tickets;
   }
 
   @Cron('45 * * * * *')
@@ -46,23 +73,43 @@ export class TicketService {
     return update;
   }
 
-  async updateStatusTicket(
-    ticketId: any,
-    status: any,
-  ): Promise<any> {
-    const update = await this.ticketReponsitory.updateStatusTicket(
+  async updateStatusTicketPayment(ticketId: any, status: any): Promise<any> {
+    const update = await this.ticketReponsitory.updateStatusTicketPayment(
       ticketId,
       status,
     );
     return update;
   }
 
-  async updateStatus(seatId: any, status: ESeatStatus): Promise<any> {
-    return await this.ticketReponsitory.updateStatus(seatId, status);
+  async updateStatusTicketCheckTicket(
+    ticketId: any,
+    staffId: any,
+    time_check: Date,
+  ): Promise<any> {
+    const update = await this.ticketReponsitory.updateStatusTicketCheckTicket(
+      ticketId,
+      staffId,
+      time_check,
+    );
+    return update;
   }
 
-  async deleteTicket(ticketId: any): Promise<any> {
-    const deleteTicket = await this.ticketReponsitory.deleteTicket(ticketId);
+  async updateStatusSeat(seatId: any, status: ESeatStatus): Promise<any> {
+    return await this.ticketReponsitory.updateStatusSeat(seatId, status);
+  }
+  async updateFoodTicket(ticketId: any, ticketDto: TicketDto): Promise<any> {
+    const update = await this.ticketReponsitory.updateFoodTicket(
+      ticketId,
+      ticketDto,
+    );
+    return update;
+  }
+
+  async deleteTicket(ticketId: any, password: any): Promise<any> {
+    const deleteTicket = await this.ticketReponsitory.deleteTicket(
+      ticketId,
+      password,
+    );
     return deleteTicket;
   }
 
@@ -82,15 +129,23 @@ export class TicketService {
     dayStart: string,
     dayEnd: string,
   ): Promise<any> {
-   
-   
     const revenue = await this.ticketReponsitory.getRevenueByCMD(
       cinemaId,
       movieId,
       dayStart,
       dayEnd,
     );
-   
+
     return revenue;
+  }
+
+  async getMovieRevenue(page: number): Promise<any> {
+    const get = await this.ticketReponsitory.getMovieRevenue(page);
+    return get;
+  }
+
+  async getCinemaRevenue(): Promise<any> {
+    const get = await this.ticketReponsitory.getCinemaRevenue();
+    return get;
   }
 }

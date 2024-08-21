@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UploadedFile,
   UseGuards,
   UseInterceptors,
@@ -39,6 +40,10 @@ export class GenreController {
     @UploadedFile() image: Express.Multer.File,
   ): Promise<any> {
     try {
+      if (image === undefined) {
+        const create = await this.genreService.Create(genreDto);
+        return create;
+      }
       const created = { ...genreDto, image: image.filename };
       const create = await this.genreService.Create(created);
       return {
@@ -49,16 +54,29 @@ export class GenreController {
     }
   }
 
+  @UseGuards(AuthAdminGuard)
+  @Get('admin')
+  async getAllForAdmin(@Query('page') page: number): Promise<any> {
+    const getall = await this.genreService.getAllForAdmin(page);
+    return getall;
+  }
+
   @UseGuards(AuthGuard)
-  @Get()
-  async getAll(): Promise<any> {
-    const getall = await this.genreService.getAll();
+  @Get('user')
+  async getAllForUser(): Promise<any> {
+    const getall = await this.genreService.getAllForUser();
+    return getall;
+  }
+
+  @Get('no/login')
+  async getAllNoLogin(): Promise<any> {
+    const getall = await this.genreService.getAllForUser();
     return getall;
   }
 
   @UseGuards(AuthGuard)
   @Get(':id')
-  async getGenre(@Param('id') id : any): Promise<any> {
+  async getGenre(@Param('id') id: any): Promise<any> {
     const getgenre = await this.genreService.getGenre(id);
     return getgenre;
   }
@@ -97,8 +115,11 @@ export class GenreController {
 
   @UseGuards(AuthAdminGuard)
   @Delete(':id')
-  async DeleteGenre(@Param('id') id: any): Promise<any> {
-    await this.genreService.deleteGenre(id);
-    return await this.genreService.deleteGenre(id);
+  async DeleteGenre(
+    @Param('id') id: any,
+    @Query('password') password: any,
+  ): Promise<any> {
+    await this.genreService.deleteGenre(id, password);
+    return await this.genreService.deleteGenre(id, password);
   }
 }

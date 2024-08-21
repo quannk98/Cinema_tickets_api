@@ -1,4 +1,8 @@
-import { ConflictException, Injectable, UnauthorizedException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  UnauthorizedException,
+} from '@nestjs/common';
 import { InjectModel } from '@nestjs/mongoose';
 import { get } from 'http';
 import { Model } from 'mongoose';
@@ -13,55 +17,80 @@ import { User } from 'src/schemas/user.schema';
 export class UserRepository {
   constructor(
     @InjectModel(User.name) private readonly userModel: Model<User>,
+    @InjectModel(UserOtp.name) private readonly userOtpModel: Model<UserOtp>,
   ) {}
 
   async createUser(createUserDto: CreateUserDto): Promise<any> {
     try {
-      
       const exitsUser = await this.userModel.findOne({
         email: createUserDto.email,
-        role: EUserRole.User,
+        status: EUserStatus.ACTIVE,
       });
-      if (exitsUser) {
-        return {
-          status: 'error',
-          message: 'Email already exists',
-        };
+      if (exitsUser) throw new ConflictException('Email already exists');
+      const register = await this.userModel.findOne({
+        email: createUserDto.email,
+        role: EUserRole.User,
+        status: EUserStatus.INACTIVE,
+      });
+      if (register) {
+        await this.userModel.findByIdAndDelete(register._id);
+        const otp = await this.userOtpModel.findOne({ userId: register._id });
+        await this.userOtpModel.findByIdAndDelete(otp._id);
       }
-      
+
       const createdUSer = new this.userModel(createUserDto);
 
       await createdUSer.save();
-     
+
       return createdUSer;
     } catch (error) {
       return {
-        status: 'error',
-        data: error.response,
+        data: error.message,
       };
     }
   }
-  async getAllUser(): Promise<any> {
-    const getAlluser = await this.userModel.find({ role: EUserRole.User });
-    return {
-      data: getAlluser,
-      message: 'Succesfully',
-    };
+  async getAllUser(page: number): Promise<any> {
+    const pageSize = 10;
+    const skip = (page - 1) * pageSize;
+    const getAlluser = await this.userModel
+      .find({ role: EUserRole.User })
+      .skip(skip)
+      .limit(pageSize);
+    return getAlluser;
   }
   async findUserById(userId: any): Promise<any> {
     const user = await this.userModel.findById(userId);
     if (!user) throw new UnauthorizedException('User not available');
     return user;
   }
-  async findByEmail(email: string): Promise<any> {
-    const user = await this.userModel.findOne({ email:email });
-   
+  async findByEmailLogin(email: string, tokendevice: string): Promise<any> {
+    const user = await this.userModel.findOne({
+      email: email,
+      status: EUserStatus.ACTIVE,
+    });
+
     if (!user) throw new UnauthorizedException('Invalid email or password');
-     
+    if (tokendevice) {
+      await this.userModel.findByIdAndUpdate(
+        user._id,
+        { tokendevice: tokendevice },
+        { new: true },
+      );
+    }
 
     return user;
-        
   }
+
+  async findByEmail(email: string): Promise<any> {
+    const user = await this.userModel.findOne({
+      email: email,
+      status: EUserStatus.ACTIVE,
+    });
+
+    if (!user) throw new UnauthorizedException('Invalid email or password');
+    return user;
+  }
+
   async updateUserById(userId: any, dataUpdate: any): Promise<any> {
     try {
       const update = await this.userModel.findByIdAndUpdate(
@@ -72,53 +101,58 @@ export class UserRepository {
         },
       );
       if (!update) {
-        return {
-          status: 'error',
-          message: 'Update failed',
-        };
+        return 'Update failed';
       }
-      return {
-        data: update,
-        message: 'Successfully',
-      };
+      return update;
     } catch (error) {}
+  }
+
+  async updateStatusUser(userId: any): Promise<any> {
+    const getUser = await this.userModel.findById(userId);
+    if (getUser.status === EUserStatus.ACTIVE) {
+      const update = await this.userModel.findByIdAndUpdate(
+        userId,
+        { status: EUserStatus.INACTIVE },
+        { new: true },
+      );
+      return update;
+    } else if (getUser.status === EUserStatus.INACTIVE) {
+      const update = await this.userModel.findByIdAndUpdate(
+        userId,
+        { status: EUserStatus.ACTIVE },
+        { new: true },
+      );
+      return update;
+    }
   }
 
   async updatePassword(userId: any, passwordNew: any): Promise<any> {
     try {
       const update = await this.userModel.findByIdAndUpdate(
         userId,
-        {password:passwordNew},
+        { password: passwordNew },
         {
           new: true,
         },
       );
       if (!update) {
-        return {
-          status: 'error',
-          message: 'Update failed',
-        };
+        return 'Update failed';
       }
-      return {
-        message: 'Đổi mật khẩu thành công',
-      };
+
+      return 'Đổi mật khẩu thành công';
     } catch (error) {}
   }
 
- 
-  async deleteUserById(userId: any): Promise<any> {
+  async deleteUserById(userId: any, password: any): Promise<any> {
     try {
+      if (password != '8888') {
+        return 'You do not have sufficient authority to delete';
+      }
       const deleteuser = await this.userModel.findByIdAndDelete(userId);
       if (!deleteuser) {
-        return {
-          status: 'error',
-          message: 'Delete failed',
-        };
+        return 'Delete failed';
       }
-      return {
-        data: deleteuser,
-        message: 'Successfully',
-      };
+      return deleteuser;
     } catch (error) {
       return 'Delete failed';
     }
@@ -128,29 +162,27 @@ export class UserRepository {
     try {
       const exists = await this.userModel.findOne({
         email: staffDto.email,
-        role: EUserRole.Staff,
       });
       if (exists) throw new ConflictException('Staff already exists');
 
       const createstaff = await new this.userModel(staffDto);
       await createstaff.save();
       if (!createstaff) {
-        return {
-          status: 'error',
-          message: 'create staff failed',
-        };
+        return 'create staff failed';
       }
-      return {
-        data: createstaff.save(),
-        message: 'Successfully',
-      };
+      return createstaff;
     } catch (error) {
       return error.response;
     }
   }
 
-  async getAllStaff(): Promise<any> {
-    const getall = await this.userModel.find({ role: EUserRole.Staff });
+  async getAllStaff(page: number): Promise<any> {
+    const pageSize = 10;
+    const skip = (page - 1) * pageSize;
+    const getall = await this.userModel
+      .find({ role: EUserRole.Staff })
+      .skip(skip)
+      .limit(pageSize);
     return getall;
   }
 
@@ -158,24 +190,29 @@ export class UserRepository {
     try {
       const getstaff = await this.userModel.findById(staffId);
       if (!getstaff) {
-        return {
-          status: 'error',
-          message: 'Staff not available',
-        };
+        return 'Staff not available';
       }
       return getstaff;
     } catch (error) {
-      console.error('Error finding staff:', error);
-      return {
-        status: 'error',
-        message: 'Staff not available',
-      };
+      return 'Staff not available';
     }
   }
-
-  async forgotPassword(): Promise<any>{
-    
+  async UpdateStatusStaff(staffId: any): Promise<any> {
+    const getStaff = await this.userModel.findById(staffId);
+    if (getStaff.status === EUserStatus.ACTIVE) {
+      const update = await this.userModel.findByIdAndUpdate(
+        staffId,
+        { status: EUserStatus.INACTIVE },
+        { new: true },
+      );
+      return update;
+    } else if (getStaff.status === EUserStatus.INACTIVE) {
+      const update = await this.userModel.findByIdAndUpdate(
+        staffId,
+        { status: EUserStatus.ACTIVE },
+        { new: true },
+      );
+      return update;
+    }
   }
-
-  
 }

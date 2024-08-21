@@ -6,6 +6,7 @@ import {
   Param,
   Post,
   Put,
+  Query,
   UseGuards,
 } from '@nestjs/common';
 import { RoomService } from './room.service';
@@ -32,17 +33,43 @@ export class RoomController {
 
   @UseGuards(AuthAdminGuard)
   @Get('')
-  async getAll(): Promise<any> {
-    const getall = await this.roomService.getAllroom();
+  async getAll(@Query('page') page: any): Promise<any> {
+    const getall = await this.roomService.getAllroom(page);
     return {
       getall,
     };
   }
 
   @UseGuards(AuthGuard)
-  @Get('movie/:movieId')
-  async getRoomByMovie(@Param('movieId') id: any): Promise<any> {
-    const getRoombymovie = await this.roomService.getRoomByMovie(id);
+  @Get('cinema/:movieId')
+  async getCinemaByMoive(@Param('movieId') id: any): Promise<any> {
+    const cinemas = await this.roomService.getCinemaByMovie(id);
+    return cinemas;
+  }
+
+  @Get('cinema/no/login/:movieId')
+  async getCinemaByMoiveNoLogin(@Param('movieId') id: any): Promise<any> {
+    const cinemas = await this.roomService.getCinemaByMovie(id);
+    return cinemas;
+  }
+
+  @UseGuards(AuthAdminGuard)
+  @Get('room/cinema')
+  async getRoomByCinema(@Query('cinemaId') cinemaId): Promise<any> {
+    const getRoom = await this.roomService.getRoomByCinema(cinemaId);
+    return getRoom;
+  }
+
+  @UseGuards(AuthGuard)
+  @Get('room')
+  async getRoomByMovie(
+    @Query('cinemaId') cinemaId,
+    @Query('movieId') movieId,
+  ): Promise<any> {
+    const getRoombymovie = await this.roomService.getRoomByMovieAndCinema(
+      movieId,
+      cinemaId,
+    );
     return {
       getRoombymovie,
     };
@@ -56,8 +83,6 @@ export class RoomController {
       getRoom,
     };
   }
-
- 
 
   @UseGuards(AuthAdminGuard)
   @Put(':id')
@@ -74,9 +99,12 @@ export class RoomController {
 
   @UseGuards(AuthAdminGuard)
   @Delete(':id')
-  async deleteRoom(@Param('id') id: any): Promise<any> {
-    const deletetime = await this.roomService.deleteRoom(id);
-    await this.roomService.deleteRoom(id);
+  async deleteRoom(
+    @Param('id') id: any,
+    @Query('password') password: any,
+  ): Promise<any> {
+    const deletetime = await this.roomService.deleteRoom(id, password);
+    await this.roomService.deleteRoom(id, password);
     return {
       deletetime,
     };

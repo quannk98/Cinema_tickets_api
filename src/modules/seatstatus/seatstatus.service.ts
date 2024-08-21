@@ -16,6 +16,19 @@ export class SeatstatusService {
     return getss;
   }
 
+  async getSeatStatusByRoomAndTime(
+    roomId: any,
+    showtimeId: any,
+    timeId: any,
+  ): Promise<any> {
+    const gets = await this.seatstatusReponsitory.getSeatStatusByRoomAndTime(
+      roomId,
+      showtimeId,
+      timeId,
+    );
+    return gets;
+  }
+
   @Cron('45 * * * * *')
   async checkSS(): Promise<any> {
     await this.seatstatusReponsitory.checkSeatstatus();

@@ -10,7 +10,8 @@ export class Seat {
   readonly price: number;
   @Prop({ type: mongoose.Schema.Types.ObjectId, ref: 'Room' })
   readonly room: string;
-
+  @Prop({ type: String, enum: ESeatStatus, default: ESeatStatus.OPEN })
+  readonly status: ESeatStatus;
 }
 
 export const SeatSchema = SchemaFactory.createForClass(Seat);

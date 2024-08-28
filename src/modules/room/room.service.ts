@@ -19,10 +19,17 @@ export class RoomService {
     return getRoom;
   }
 
-  async getRoomByMovieAndCinema(movieId: any, cinemaId: any): Promise<any> {
+  async getRoomByMovieAndCinema(
+    movieId: any,
+    cinemaId: any,
+    showtime: any,
+    time: any,
+  ): Promise<any> {
     const getroom = await this.roomReponsitory.getRoomByMovieAndCinema(
       movieId,
       cinemaId,
+      showtime,
+      time,
     );
     return getroom;
   }

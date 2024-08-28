@@ -118,6 +118,7 @@ export class MovieReponsitory {
 
       const getMoviesc = await this.movieModel.find({
         release_date: { $gt: date },
+        release_status: { $ne: 'nc' },
       });
 
       if (getMoviesc.length > 0) {

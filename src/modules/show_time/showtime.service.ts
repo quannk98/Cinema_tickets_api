@@ -37,10 +37,10 @@ export class ShowtimeService {
     return update;
   }
 
-  @Cron('45 * * * * *')
-  async checkShowtime(): Promise<any> {
-    await this.showtimeReponsitory.checkShowtime();
-  }
+  // @Cron('45 * * * * *')
+  // async checkShowtime(): Promise<any> {
+  //   await this.showtimeReponsitory.checkShowtime();
+  // }
 
   async deleteShowtime(showtimeId: any, password: any): Promise<Showtime> {
     const deleteShowtime = await this.showtimeReponsitory.deleteShowtime(

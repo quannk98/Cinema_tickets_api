@@ -2,7 +2,6 @@ import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import mongoose from 'mongoose';
 import { EDiscountStatus } from 'src/common/enums/user.enum';
 
-
 @Schema()
 export class Discount {
   @Prop()
@@ -20,16 +19,16 @@ export class Discount {
   @Prop()
   readonly type: string;
 
-  @Prop({type:Date})
+  @Prop({ type: Date })
   readonly dayStart: Date;
 
-  @Prop({type:Date})
+  @Prop({ type: Date })
   readonly dayEnd: Date;
 
   @Prop({ type: [mongoose.Schema.Types.ObjectId], ref: 'Cinema' })
   readonly cinema: mongoose.Types.ObjectId[];
 
-  @Prop({default:EDiscountStatus.INACTIVE})
-  readonly status: EDiscountStatus
+  @Prop({ default: EDiscountStatus.ACTIVE })
+  readonly status: EDiscountStatus;
 }
-export const DiscountSchema = SchemaFactory.createForClass(Discount)
+export const DiscountSchema = SchemaFactory.createForClass(Discount);

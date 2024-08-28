@@ -7,21 +7,31 @@ import { InjectModel } from '@nestjs/mongoose';
 import { Model } from 'mongoose';
 import { ShowtimeDto } from 'src/modules/show_time/dto/showtime.dto';
 import { Showtime } from 'src/schemas/showtime.schema';
+import { Time } from 'src/schemas/time.schema';
 
 @Injectable()
 export class ShowtimeReponsitory {
   constructor(
     @InjectModel(Showtime.name) private readonly showtimeModel: Model<Showtime>,
+    @InjectModel(Time.name) private readonly timeModel: Model<Time>,
   ) {}
   async createShowtime(showtimeDto: ShowtimeDto): Promise<any> {
     try {
       const existShowtime = await this.showtimeModel.findOne({
-        movie: showtimeDto.movie,
         date: new Date(showtimeDto.date),
       });
+      if (existShowtime) {
+        const existingTimes = new Set(
+          existShowtime.time.map((t) => t.toString()),
+        );
 
-      if (existShowtime)
-        throw new ConflictException('Show time already exists');
+        for (const item of showtimeDto.time) {
+          if (existingTimes.has(item)) {
+            throw new Error('Time already exists in day');
+          }
+        }
+      }
+
       const dateCreate = {
         ...showtimeDto,
         date: new Date(showtimeDto.date),
@@ -64,32 +74,40 @@ export class ShowtimeReponsitory {
   }
 
   async updateShowtime(showtimeId: any, dataUpdate: any): Promise<any> {
-    const dataupdate = {
-      ...dataUpdate,
-      date: dataUpdate.date,
-    };
+    const existShowtime = await this.showtimeModel.find({
+      date: new Date(dataUpdate.date),
+      _id: { $ne: showtimeId },
+    });
+    for (const showtime of existShowtime) {
+      for (const time of showtime.time) {
+        if (dataUpdate.time.includes(time.toString())) {
+          const nameTime = await this.timeModel.findById(time);
+          return { message: 'Time already exists ', time: nameTime.time };
+        }
+      }
+    }
+
     const update = await this.showtimeModel.findByIdAndUpdate(
       showtimeId,
-      dataupdate,
-      {
-        new: true,
-      },
+      dataUpdate,
+      { new: true },
     );
 
     if (!update) {
       return 'Update Failed';
     }
+
     return update;
   }
 
-  async checkShowtime(): Promise<any> {
-    const today = new Date();
-    const deletedCount = await this.showtimeModel.deleteMany({
-      date: { $lt: today },
-    });
+  // async checkShowtime(): Promise<any> {
+  //   const today = new Date();
+  //   const deletedCount = await this.showtimeModel.deleteMany({
+  //     date: { $lt: today },
+  //   });
 
-    return deletedCount;
-  }
+  //   return deletedCount;
+  // }
 
   async deleteShowtime(showtimeId: any, password: any): Promise<any> {
     if (password != '8888') {

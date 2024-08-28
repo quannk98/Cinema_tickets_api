@@ -24,6 +24,7 @@ export class DiscountReponsitory {
   ) {}
   async create(discountDto: DiscountDto): Promise<any> {
     try {
+      console.log('1', discountDto.cinema);
       const existsdiscount = await this.discountModel.findOne({
         name: discountDto.name,
       });
@@ -39,6 +40,7 @@ export class DiscountReponsitory {
         ...discountDto,
         dayStart: new Date(discountDto.dayStart),
         dayEnd: new Date(discountDto.dayEnd),
+        date: new Date(),
       };
       const creatediscount = new this.discountModel(dataCreate);
       if (!creatediscount) throw new UnauthorizedException('Create Fail');

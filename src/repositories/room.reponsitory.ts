@@ -6,6 +6,7 @@ import {
 import { InjectModel } from '@nestjs/mongoose';
 import mongoose, { Model } from 'mongoose';
 import { RoomDto } from 'src/modules/room/dto/room.dto';
+import { Movie } from 'src/schemas/movie.schema';
 import { Room } from 'src/schemas/room.schema';
 import { Showtime } from 'src/schemas/showtime.schema';
 import { Time } from 'src/schemas/time.schema';
@@ -16,11 +17,13 @@ export class RoomReponsitory {
     @InjectModel(Room.name) private readonly roomModel: Model<Room>,
     @InjectModel(Showtime.name) private readonly showtimeModel: Model<Showtime>,
     @InjectModel(Time.name) private readonly timeModel: Model<Time>,
+    @InjectModel(Movie.name) private readonly movieModel: Model<Movie>,
   ) {}
   async createRoom(roomDto: RoomDto): Promise<any> {
     try {
       const Room = await this.roomModel.findOne({
         name: roomDto.name,
+        movie: roomDto.movie,
         cinema: roomDto.cinema,
       });
 
@@ -92,21 +95,32 @@ export class RoomReponsitory {
     return getRoom;
   }
 
-  async getRoomByMovieAndCinema(movieId: any, cinemaId: any): Promise<any> {
-    const getRoom = await this.roomModel
-      .find({
-        movie: movieId,
-        cinema: cinemaId,
-      })
-      .populate([
-        {
-          path: 'showtime',
-          select: 'date time',
-          populate: [{ path: 'time', select: 'time' }],
-        },
-      ]);
+  async getRoomByMovieAndCinema(
+    movieId: any,
+    cinemaId: any,
+    showtime: any,
+    time: any,
+  ): Promise<any> {
+    const getRoom = await this.roomModel.find({
+      movie: movieId,
+      cinema: cinemaId,
+    });
 
-    return getRoom;
+    for (const room of getRoom) {
+      for (const showtimeCheck of room.showtime) {
+        if (showtimeCheck.toString() === showtime.toString()) {
+          const times = await this.showtimeModel.findById(showtimeCheck);
+
+          for (const timeCheck of times.time) {
+            if (timeCheck.toString() === time.toString()) {
+              return room;
+            }
+          }
+        }
+      }
+    }
+
+    return null;
   }
 
   async getRoomByCinema(cinemaId: any): Promise<any> {
@@ -130,19 +144,56 @@ export class RoomReponsitory {
     const cinemas = await this.roomModel
       .find({ movie: movieId })
       .populate([{ path: 'cinema', select: 'name address hotline' }]);
-    return cinemas;
+
+    const groupedCinemas = cinemas.reduce((acc, cinema: any) => {
+      const cinemaId = cinema.cinema._id;
+      if (!acc[cinemaId]) {
+        acc[cinemaId] = {
+          cinema: cinema.cinema,
+          rooms: [],
+        };
+      }
+      acc[cinemaId].rooms.push({
+        _id: cinema._id,
+        name: cinema.name,
+        showtimes: cinema.showtime,
+        movie: cinema.movie,
+      });
+      return acc;
+    }, {});
+
+    const result = Object.values(groupedCinemas);
+
+    return result;
   }
 
   async updateRoom(roomId: any, dataUpdate: any): Promise<any> {
+    const newShowtimes = dataUpdate.showtime;
+
+    const uniqueDates = new Set<string>();
+
+    for (const showtimeId of newShowtimes) {
+      const day = await this.showtimeModel.findById(showtimeId);
+      const dayString = day.date.toString();
+
+      if (uniqueDates.has(dayString)) {
+        return 'Day allready exists';
+      }
+
+      uniqueDates.add(dayString);
+    }
+
     const update = await this.roomModel.findByIdAndUpdate(roomId, dataUpdate, {
       new: true,
     });
+
     if (!update) {
       return {
         status: 'error',
-        message: 'Update Failed',
+        message: 'Cập nhật thất bại',
       };
     }
+
     return update;
   }
 

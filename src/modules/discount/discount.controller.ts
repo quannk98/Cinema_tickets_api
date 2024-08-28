@@ -55,6 +55,7 @@ export class DiscountController {
       if (discountDto.cinema === undefined) {
         return 'Error Not Cinema';
       }
+      console.log('11', discountDto.cinema);
       const dataCreate = {
         ...discountDto,
         // cinema: JSON.parse(discountDto.cinema),
@@ -99,7 +100,6 @@ export class DiscountController {
     return discount;
   }
 
-
   @UseGuards(AuthAdminGuard)
   @Get('admin')
   async getAllForAdmin(@Query('page') page: number): Promise<any> {
@@ -118,7 +118,6 @@ export class DiscountController {
     };
   }
 
-  
   @Get('no/login')
   async getAllNoLogin(): Promise<any> {
     const getall = await this.discountService.getAllForUser();
@@ -126,7 +125,6 @@ export class DiscountController {
       getall,
     };
   }
-
 
   @Get('no/login/:id')
   async getDiscountNoLogin(@Param('id') id: any): Promise<any> {

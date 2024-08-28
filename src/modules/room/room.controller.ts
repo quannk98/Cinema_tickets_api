@@ -61,14 +61,18 @@ export class RoomController {
   }
 
   @UseGuards(AuthGuard)
-  @Get('room')
+  @Get('room/cmst')
   async getRoomByMovie(
     @Query('cinemaId') cinemaId,
     @Query('movieId') movieId,
+    @Query('showtimeId') showtimeId,
+    @Query('timeId') timeId,
   ): Promise<any> {
     const getRoombymovie = await this.roomService.getRoomByMovieAndCinema(
       movieId,
       cinemaId,
+      showtimeId,
+      timeId,
     );
     return {
       getRoombymovie,

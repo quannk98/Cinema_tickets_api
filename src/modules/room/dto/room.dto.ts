@@ -11,5 +11,8 @@ export class RoomDto {
   readonly showtime: string[];
 
   @IsString()
+  readonly time: string[];
+
+  @IsString()
   readonly cinema: string;
 }
